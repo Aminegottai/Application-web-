@@ -8,15 +8,28 @@ function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       setMessage('Les mots de passe ne correspondent pas.');
-    } else if (!role) {
+      return;
+    }
+    if (!role) {
       setMessage('Veuillez sélectionner un rôle.');
-    } else {
-      // Simuler une requête de création de compte
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Erreur lors de l\'inscription');
       setMessage(`Compte ${role} créé avec succès !`);
+    } catch (err) {
+      setMessage(err.message);
     }
   };
 

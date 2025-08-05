@@ -1,17 +1,31 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (email === 'user@example.com' && password === 'password123') {
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Empêche le rechargement de la page (évite GET par défaut)
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Erreur de connexion');
       setMessage('Connexion réussie !');
-    } else {
-      setMessage('Email ou mot de passe incorrect.');
+      localStorage.setItem('token', data.token); // Stocke le token
+      // Décodage basique du token JWT pour obtenir le rôle
+      const tokenPayload = JSON.parse(atob(data.token.split('.')[1]));
+      if (tokenPayload.role === 'agence') {
+        navigate('/dashboard'); // Redirige vers dashboard pour rôle agence
+      }
+    } catch (err) {
+      setMessage(err.message);
     }
   };
 
